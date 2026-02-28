@@ -191,7 +191,7 @@
     async function requireAuth() {
       const { data, error } = await sb.auth.getSession();
       if (error || !data.session) {
-        location.href = "./login.html";
+        location.href = "./index.html";
         return null;
       }
       return data.session;
@@ -373,7 +373,7 @@ queuePick.value = "unassigned";
 
     document.getElementById("logoutBtn").onclick = async () => {
       await sb.auth.signOut();
-      location.href = "./login.html";
+      location.href = "./index.html";
     };
 
     document.getElementById("refreshBtn").onclick = () => loadQueues(profile);
@@ -411,3 +411,4 @@ queuePick.value = "unassigned";
   </script>
 </body>
 </html>
+
