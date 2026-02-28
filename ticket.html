@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ticket • Helpdesk</title>
+  <link rel="stylesheet" href="./app.css" />
+
+  <style>
+    .pageHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+    .crumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .crumb a.btn{text-decoration:none}
+    .twoCol{display:grid;grid-template-columns:1.35fr .65fr;gap:14px;margin-top:14px;align-items:start}
+    @media (max-width:1050px){.twoCol{grid-template-columns:1fr}}
+
+    .metaGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:10px}
+    @media (max-width:900px){.metaGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .metaItem{border:1px solid var(--stroke);background:rgba(0,0,0,.16);border-radius:14px;padding:10px;min-height:66px}
+    .metaItem .k{color:var(--muted);font-size:12px}
+    .metaItem .v{margin-top:4px;font-weight:700;word-break:break-word}
+
+    .descBox{margin-top:10px;border:1px solid var(--stroke);background:rgba(0,0,0,.16);border-radius:16px;padding:12px;color:rgba(255,255,255,.86);white-space:pre-wrap;word-break:break-word}
+
+    .timeline{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .bubble{border:1px solid var(--stroke);background:rgba(0,0,0,.16);border-radius:16px;padding:12px}
+    .bubbleHead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;color:var(--muted);font-size:12px}
+    .bubbleBody{white-space:pre-wrap;word-break:break-word;line-height:1.35}
+    .bubble.me{background:linear-gradient(135deg,rgba(110,231,255,.10),rgba(167,139,250,.08));border-color:rgba(110,231,255,.20)}
+
+    .actionsRow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .small{font-size:12px;padding:8px 10px;border-radius:12px}
+
+    .attachList{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+    .attachItem{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--stroke);background:rgba(0,0,0,.16);border-radius:14px;padding:10px 12px}
+    .attachLeft{display:flex;align-items:center;gap:10px;min-width:220px}
+    .attachName{font-weight:700}
+    .attachMeta{color:var(--muted);font-size:12px}
+
+    .progressBar{height:10px;width:100%;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);overflow:hidden;margin-top:8px;display:none}
+    .progressFill{height:100%;width:0%;background:linear-gradient(135deg,rgba(110,231,255,.55),rgba(167,139,250,.45))}
+
+    /* Keep staff UI visible if JS fails; JS will hide for non-staff */
+    .staffOnly{display:block}
+
+    /* ===== Internal note toggle ===== */
+    #internalWrap{ display:none; } /* JS enables for staff */
+    .toggle{
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      max-width: 340px;
+    }
+    .toggle:hover{ background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+    .toggle input{ display:none; }
+    .toggle .track{
+      width:46px; height:26px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      position:relative;
+      flex: 0 0 auto;
+    }
+    .toggle .thumb{
+      width:20px; height:20px; border-radius:50%;
+      position:absolute; top:50%; left:3px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,.82);
+      transition: left .18s ease, background .18s ease;
+    }
+    .toggle .txt{ display:flex; flex-direction:column; line-height:1.1; }
+    .toggle .t1{ font-weight:800; font-size:12px; color: rgba(255,255,255,.92); }
+    .toggle .t2{ font-size:11px; color: rgba(255,255,255,.60); margin-top:2px; }
+
+    .toggle input:checked + .track{
+      border-color: rgba(110,231,255,.35);
+      background: linear-gradient(135deg, rgba(110,231,255,.18), rgba(167,139,250,.14));
+    }
+    .toggle input:checked + .track .thumb{
+      left: 23px;
+      background: rgba(110,231,255,.95);
+    }
+
+    /* ===== Upload row layout ===== */
+    .uploadRow{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .pickCol{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:260px;
+      flex:1 1 420px;
+    }
+
+    /* Styled file pick button */
+    .fileInput{
+      position: relative;
+      display:inline-flex; align-items:center; gap:10px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      width: fit-content;
+    }
+    .fileInput:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+    .fileInput:active{ transform: translateY(0px) scale(.99); }
+    .fileInput input[type="file"]{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      cursor:pointer;
+    }
+
+    .fileName{
+      font-size:12px;
+      color:var(--muted);
+      padding-left:4px;
+      max-width:520px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    #uploadBtn{ min-width:140px; }
+
+    @media (max-width: 560px){
+      #uploadBtn{ width:100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" style="display:grid;place-items:center;font-weight:900;">NJ</div>
+        <div>
+          <h1>IT Helpdesk</h1>
+          <p>Ticket view</p>
+        </div>
+      </div>
+
+      <div class="user">
+        <span class="pill"><i data-lucide="user"></i> <span id="who"></span></span>
+        <button class="btn" id="refreshBtn"><i data-lucide="refresh-cw"></i> Refresh</button>
+        <button class="btn danger" id="logoutBtn"><i data-lucide="log-out"></i> Logout</button>
+      </div>
+    </div>
+
+    <div class="pageHead">
+      <div class="crumb">
+        <a class="btn" href="./dashboard.html"><i data-lucide="arrow-left"></i> Back</a>
+        <span class="pill"><i data-lucide="ticket"></i> <span id="ticketTitle">Ticket</span></span>
+        <button class="btn" id="copyLinkBtn"><i data-lucide="link"></i> Copy link</button>
+      </div>
+
+      <div class="actionsRow staffOnly" id="staffQuick">
+        <button class="btn small" id="assignMeBtn"><i data-lucide="hand"></i> Assign to me</button>
+        <button class="btn small" id="setInProgressBtn"><i data-lucide="play"></i> In progress</button>
+        <button class="btn small" id="setResolvedBtn"><i data-lucide="check-circle"></i> Resolve</button>
+        <button class="btn small" id="setClosedBtn"><i data-lucide="lock"></i> Close</button>
+        <button class="btn small" id="setOpenBtn"><i data-lucide="unlock"></i> Re-open</button>
+      </div>
+    </div>
+
+    <div class="twoCol">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="cardTitle">
+            <i data-lucide="file-text"></i>
+            <div>
+              <h2>Ticket details</h2>
+              <span id="ticketIdLine" class="muted">Loading…</span>
+            </div>
+          </div>
+          <div id="badges"></div>
+        </div>
+
+        <div class="metaGrid">
+          <div class="metaItem"><div class="k">Status</div><div class="v" id="mStatus">—</div></div>
+          <div class="metaItem"><div class="k">Priority</div><div class="v" id="mPriority">—</div></div>
+          <div class="metaItem"><div class="k">Category</div><div class="v" id="mCategory">—</div></div>
+          <div class="metaItem"><div class="k">Created</div><div class="v" id="mCreated">—</div></div>
+
+          <div class="metaItem"><div class="k">Requester</div><div class="v" id="mRequester">—</div></div>
+          <div class="metaItem"><div class="k">Assigned to</div><div class="v" id="mAssigned">—</div></div>
+          <div class="metaItem"><div class="k">Ticket ID</div><div class="v" id="mId">—</div></div>
+          <div class="metaItem"><div class="k">Last update</div><div class="v" id="mUpdated">—</div></div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label>Description</label>
+          <div class="descBox" id="desc">—</div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <div class="cardHeader" style="margin-bottom:0;">
+            <div class="cardTitle">
+              <i data-lucide="messages-square"></i>
+              <div><h2>Comments</h2><span class="muted">Conversation timeline</span></div>
+            </div>
+          </div>
+
+          <div class="timeline" id="comments"></div>
+
+          <div style="margin-top:10px;">
+            <label>Add comment</label>
+            <textarea id="commentText" placeholder="Write a reply…"></textarea>
+
+            <div class="actionsRow" style="margin-top:10px; justify-content:space-between;">
+              <div class="staffOnly" id="internalWrap">
+                <label class="toggle">
+                  <input type="checkbox" id="internalNote" />
+                  <span class="track"><span class="thumb"></span></span>
+                  <span class="txt">
+                    <span class="t1">Internal note</span>
+                    <span class="t2">Visible to staff only</span>
+                  </span>
+                </label>
+              </div>
+
+              <button class="btn primary" id="postBtn"><i data-lucide="send"></i> Post</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card staffOnly" id="staffPanel">
+          <div class="cardHeader">
+            <div class="cardTitle">
+              <i data-lucide="settings"></i>
+              <div><h2>Staff panel</h2><span class="muted">Manage assignment & status</span></div>
+            </div>
+          </div>
+
+          <div class="actionsRow" style="margin-bottom:10px;">
+            <div style="flex:1; min-width:200px;">
+              <label>Status</label>
+              <select id="statusPick">
+                <option value="open">open</option>
+                <option value="in_progress">in_progress</option>
+                <option value="waiting_on_user">waiting_on_user</option>
+                <option value="resolved">resolved</option>
+                <option value="closed">closed</option>
+              </select>
+            </div>
+            <button class="btn" id="saveStatusBtn"><i data-lucide="save"></i> Save</button>
+          </div>
+
+          <div class="actionsRow">
+            <button class="btn" id="assignMeBtn2"><i data-lucide="hand"></i> Assign to me</button>
+            <button class="btn" id="unassignBtn"><i data-lucide="user-x"></i> Unassign</button>
+          </div>
+
+          <div class="actionsRow" id="adminAssignRow" style="margin-top:10px;">
+            <div style="flex:1; min-width:240px;">
+              <label>Assign to agent</label>
+              <select id="assigneePick">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+            <button class="btn" id="assignBtn"><i data-lucide="user-check"></i> Assign</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardHeader">
+            <div class="cardTitle">
+              <i data-lucide="paperclip"></i>
+              <div><h2>Attachments</h2><span class="muted">Upload screenshots, logs, documents</span></div>
+            </div>
+          </div>
+
+          <!-- ✅ FIXED UPLOAD UI (NO BROKEN NESTING) -->
+          <div class="uploadRow">
+            <div class="pickCol">
+              <label class="fileInput">
+                <i data-lucide="folder-open"></i>
+                <span>Choose file</span>
+                <input type="file" id="filePick" />
+              </label>
+              <div class="fileName" id="fileName">No file selected</div>
+            </div>
+
+            <button class="btn primary" id="uploadBtn">
+              <i data-lucide="upload"></i> Upload
+            </button>
+          </div>
+
+          <div class="progressBar" id="prog"><div class="progressFill" id="progFill"></div></div>
+          <div class="attachList" id="attachments"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">
+    <p class="title" id="toastTitle"></p>
+    <p class="body" id="toastBody"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    /************ PUT YOUR KEYS HERE (NO IMPORTS) ************/
+    const SUPABASE_URL = "https://bshhjnihovkeiokxacnp.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_FVatWtv9a7IkhklQNUkIlw_CeibbDog";
+    const STORAGE_BUCKET = "ticket-attachments";
+    /*******************************************************/
+
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // toast
+    const toast = document.getElementById("toast");
+    const toastTitle = document.getElementById("toastTitle");
+    const toastBody = document.getElementById("toastBody");
+    function showToast(title, body){
+      toastTitle.textContent = title;
+      toastBody.textContent = body ?? "";
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    // helpers
+    function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, (m)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m])); }
+    function fmtDt(iso){ try{ return new Date(iso).toLocaleString(); }catch{ return String(iso ?? ""); } }
+    function fileIcon(name){
+      const n=(name||"").toLowerCase();
+      if(n.endsWith(".png")||n.endsWith(".jpg")||n.endsWith(".jpeg")||n.endsWith(".webp")) return "image";
+      if(n.endsWith(".pdf")) return "file-text";
+      if(n.endsWith(".zip")||n.endsWith(".rar")) return "archive";
+      return "file";
+    }
+    function badgeStatus(s){ return `<span class="badge status-${s}"><i data-lucide="activity"></i> ${escapeHtml(s)}</span>`; }
+    function badgePrio(p){ return `<span class="badge prio-${p}"><i data-lucide="flag"></i> ${escapeHtml(p)}</span>`; }
+
+    // DOM
+    const whoEl = document.getElementById("who");
+    const ticketTitleEl = document.getElementById("ticketTitle");
+    const ticketIdLine = document.getElementById("ticketIdLine");
+    const badgesEl = document.getElementById("badges");
+
+    const mStatus = document.getElementById("mStatus");
+    const mPriority = document.getElementById("mPriority");
+    const mCategory = document.getElementById("mCategory");
+    const mCreated = document.getElementById("mCreated");
+    const mRequester = document.getElementById("mRequester");
+    const mAssigned = document.getElementById("mAssigned");
+    const mId = document.getElementById("mId");
+    const mUpdated = document.getElementById("mUpdated");
+    const descEl = document.getElementById("desc");
+
+    const commentsEl = document.getElementById("comments");
+    const commentText = document.getElementById("commentText");
+    const postBtn = document.getElementById("postBtn");
+    const internalWrap = document.getElementById("internalWrap");
+    const internalNote = document.getElementById("internalNote");
+
+    const staffPanel = document.getElementById("staffPanel");
+    const staffQuick = document.getElementById("staffQuick");
+    const statusPick = document.getElementById("statusPick");
+    const saveStatusBtn = document.getElementById("saveStatusBtn");
+
+    const assignMeBtn = document.getElementById("assignMeBtn");
+    const assignMeBtn2 = document.getElementById("assignMeBtn2");
+    const unassignBtn = document.getElementById("unassignBtn");
+    const setInProgressBtn = document.getElementById("setInProgressBtn");
+    const setResolvedBtn = document.getElementById("setResolvedBtn");
+    const setClosedBtn = document.getElementById("setClosedBtn");
+    const setOpenBtn = document.getElementById("setOpenBtn");
+
+    const adminAssignRow = document.getElementById("adminAssignRow");
+    const assigneePick = document.getElementById("assigneePick");
+    const assignBtn = document.getElementById("assignBtn");
+
+    const filePick = document.getElementById("filePick");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const attachmentsEl = document.getElementById("attachments");
+    const prog = document.getElementById("prog");
+    const progFill = document.getElementById("progFill");
+    const fileNameEl = document.getElementById("fileName");
+
+    // file name label
+    filePick.addEventListener("change", () => {
+      const f = filePick.files?.[0];
+      fileNameEl.textContent = f ? f.name : "No file selected";
+    });
+
+    // top buttons
+    document.getElementById("copyLinkBtn").onclick = async () => {
+      try{ await navigator.clipboard.writeText(location.href); showToast("Copied","Ticket link copied."); }
+      catch{ showToast("Copy failed","Clipboard blocked by browser."); }
+    };
+    document.getElementById("refreshBtn").onclick = () => boot(true);
+    document.getElementById("logoutBtn").onclick = async () => {
+      await sb.auth.signOut();
+      location.href = "./login.html";
+    };
+
+    // ticket id
+    const params = new URLSearchParams(location.search);
+    const ticketId = Number(params.get("id"));
+    if (!ticketId) location.href = "./dashboard.html";
+
+    // profile cache
+    const profileCache = new Map();
+    async function displayName(profileId){
+      if(!profileId) return "—";
+      if(profileCache.has(profileId)) return profileCache.get(profileId);
+
+      const { data, error } = await sb.from("profiles").select("full_name, role").eq("id", profileId).single();
+      let label;
+      if(error || !data){
+        label = `User (${String(profileId).slice(0,6)}…)`;
+      } else {
+        const nm = data.full_name ? data.full_name : `User (${String(profileId).slice(0,6)}…)`;
+        const rl = String(data.role||"").toLowerCase().trim();
+        label = rl ? `${nm} (${rl})` : nm;
+      }
+      profileCache.set(profileId, label);
+      return label;
+    }
+
+    function setStaffUI(role){
+      const r = String(role||"").toLowerCase().trim();
+      const isStaff = (r === "admin" || r === "agent");
+      const isAdmin = (r === "admin");
+
+      // hide/show staff blocks
+      document.querySelectorAll(".staffOnly").forEach(el => el.style.display = isStaff ? "" : "none");
+      if (adminAssignRow) adminAssignRow.style.display = isAdmin ? "" : "none";
+      if (unassignBtn) unassignBtn.style.display = isAdmin ? "" : "none";
+      if (internalWrap) internalWrap.style.display = isStaff ? "block" : "none";
+
+      window.__ROLE = r;
+      window.__IS_STAFF = isStaff;
+      window.__IS_ADMIN = isAdmin;
+    }
+
+    async function requireAuth(){
+      const { data, error } = await sb.auth.getSession();
+      if(error || !data.session){
+        location.href = "./login.html";
+        return null;
+      }
+      return data.session;
+    }
+
+    async function getMyProfile(uid){
+      const { data, error } = await sb.from("profiles").select("id, full_name, role").eq("id", uid).single();
+      if(error) throw error;
+      return data;
+    }
+
+    async function fetchTicket(){
+      const { data, error } = await sb
+        .from("tickets")
+        .select("id,title,description,status,priority,category,created_at,updated_at,requester_id,assigned_to")
+        .eq("id", ticketId)
+        .single();
+      if(error) throw error;
+      return data;
+    }
+
+    async function fetchComments(){
+      const { data, error } = await sb
+        .from("ticket_comments")
+        .select("id,ticket_id,author_id,body,created_at,is_internal")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending: true });
+      if(error) throw error;
+      return data ?? [];
+    }
+
+    async function fetchAttachments(){
+      const { data, error } = await sb
+        .from("ticket_attachments")
+        .select("id,ticket_id,uploader_id,file_name,storage_path,created_at")
+        .eq("ticket_id", ticketId)
+        .order("created_at", { ascending:false });
+      if(error) throw error;
+      return data ?? [];
+    }
+
+    async function renderTicket(t){
+      ticketTitleEl.textContent = `#${t.id} • ${t.title}`;
+      ticketIdLine.textContent = `Ticket #${t.id}`;
+      badgesEl.innerHTML = `${badgeStatus(t.status)} ${badgePrio(t.priority)}`;
+
+      mStatus.textContent = t.status;
+      mPriority.textContent = t.priority;
+      mCategory.textContent = t.category || "—";
+      mCreated.textContent = fmtDt(t.created_at);
+
+      mId.textContent = String(t.id);
+      mUpdated.textContent = fmtDt(t.updated_at || t.created_at);
+
+      mRequester.textContent = await displayName(t.requester_id);
+      mAssigned.textContent = t.assigned_to ? await displayName(t.assigned_to) : "—";
+
+      descEl.textContent = t.description || "";
+      if(statusPick) statusPick.value = t.status;
+
+      if (window.__IS_ADMIN && assigneePick) assigneePick.value = t.assigned_to || "";
+
+      lucide.createIcons();
+    }
+
+    async function renderComments(items, meId){
+      const isStaff = !!window.__IS_STAFF;
+
+      const visible = (items ?? []).filter(c => !(c.is_internal && !isStaff));
+      commentsEl.innerHTML = "";
+
+      if (!visible.length){
+        commentsEl.innerHTML = `<div class="muted">No comments yet.</div>`;
+        return;
+      }
+
+      for (const c of visible){
+        const div = document.createElement("div");
+        div.className = "bubble" + (c.author_id === meId ? " me" : "");
+
+        const internalTag = c.is_internal
+          ? `<span class="badge" style="background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.25)">
+              <i data-lucide="lock"></i> internal
+            </span>`
+          : "";
+
+        const authorLabel = (c.author_id === meId)
+          ? "You"
+          : await displayName(c.author_id);
+
+        div.innerHTML = `
+          <div class="bubbleHead">
+            <span>${authorLabel} • ${fmtDt(c.created_at)}</span>
+            <span>${internalTag}</span>
+          </div>
+          <div class="bubbleBody">${escapeHtml(c.body)}</div>
+        `;
+
+        commentsEl.appendChild(div);
+      }
+
+      lucide.createIcons();
+    }
+
+
+    function renderAttachments(items){
+      attachmentsEl.innerHTML = "";
+      if(!items.length){
+        attachmentsEl.innerHTML = `<div class="muted">No attachments yet.</div>`;
+        return;
+      }
+
+      for(const a of items){
+        const icon = fileIcon(a.file_name);
+        const btnId = `dl_${a.id}`;
+        const el = document.createElement("div");
+        el.className = "attachItem";
+        el.innerHTML = `
+          <div class="attachLeft">
+            <span class="pill"><i data-lucide="${icon}"></i></span>
+            <div>
+              <div class="attachName">${escapeHtml(a.file_name)}</div>
+              <div class="attachMeta">${fmtDt(a.created_at)}</div>
+            </div>
+          </div>
+          <div class="actionsRow">
+            <button class="btn small" id="${btnId}"><i data-lucide="download"></i> Open</button>
+          </div>
+        `;
+        attachmentsEl.appendChild(el);
+
+        document.getElementById(btnId).onclick = async () => {
+          try{
+            const { data, error } = await sb.storage.from(STORAGE_BUCKET).createSignedUrl(a.storage_path, 60*5);
+            if(error) throw error;
+            window.open(data.signedUrl, "_blank");
+          }catch(e){
+            showToast("Open failed", e.message ?? String(e));
+          }
+        };
+      }
+      lucide.createIcons();
+    }
+
+    async function saveStatus(newStatus){
+      const { error } = await sb.from("tickets").update({ status:newStatus }).eq("id", ticketId);
+      if(error) throw error;
+      showToast("Updated", `Status → ${newStatus}`);
+    }
+
+    async function assignToMe(uid){
+      const { error } = await sb.from("tickets").update({ assigned_to: uid }).eq("id", ticketId);
+      if(error) throw error;
+      showToast("Assigned","Ticket assigned to you.");
+    }
+
+    async function unassign(){
+      const { error } = await sb.from("tickets").update({ assigned_to: null }).eq("id", ticketId);
+      if(error) throw error;
+      showToast("Unassigned","Ticket is now unassigned.");
+    }
+
+    async function assignToUser(uidOrNull){
+      const { error } = await sb.from("tickets").update({ assigned_to: uidOrNull }).eq("id", ticketId);
+      if(error) throw error;
+      showToast("Assigned", uidOrNull ? "Ticket assigned." : "Ticket unassigned.");
+    }
+
+    async function postComment(meId){
+      const body = commentText.value.trim();
+      if(!body) return;
+
+      const wantInternal = !!window.__IS_STAFF && internalNote.checked;
+
+      if(wantInternal){
+        const { error } = await sb.from("ticket_comments").insert([{
+          ticket_id: ticketId, author_id: meId, body, is_internal: true
+        }]);
+        if(error){
+          const { error: e2 } = await sb.from("ticket_comments").insert([{
+            ticket_id: ticketId, author_id: meId, body
+          }]);
+          if(e2) throw e2;
+          showToast("Note","DB has no internal notes column; posted normal comment.");
+        } else {
+          showToast("Posted","Internal note added.");
+        }
+      } else {
+        const { error } = await sb.from("ticket_comments").insert([{
+          ticket_id: ticketId, author_id: meId, body
+        }]);
+        if(error) throw error;
+        showToast("Posted","Comment added.");
+      }
+
+      commentText.value = "";
+      internalNote.checked = false;
+    }
+
+    async function uploadAttachment(meId){
+      const file = filePick.files?.[0];
+      if(!file){ showToast("Choose file","Pick a file first."); return; }
+
+      prog.style.display = "block";
+      progFill.style.width = "12%";
+
+      const safeName = file.name.replace(/[^\w.\-() ]+/g,"_");
+      const path = `tickets/${ticketId}/${Date.now()}_${safeName}`;
+
+      try{
+        progFill.style.width = "35%";
+        const { error: upErr } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { cacheControl:"3600", upsert:false });
+        if(upErr) throw upErr;
+
+        progFill.style.width = "70%";
+        const { error: dbErr } = await sb.from("ticket_attachments").insert([{
+          ticket_id: ticketId, uploader_id: meId, file_name: file.name, storage_path: path
+        }]);
+        if(dbErr) throw dbErr;
+
+        progFill.style.width = "100%";
+        showToast("Uploaded","Attachment added.");
+        filePick.value = "";
+        fileNameEl.textContent = "No file selected";
+      } finally {
+        setTimeout(()=>{ prog.style.display="none"; progFill.style.width="0%"; }, 700);
+      }
+    }
+
+    async function loadAgentsIntoSelect(){
+      const { data, error } = await sb
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("role","agent")
+        .order("full_name", { ascending:true });
+      if(error) throw error;
+
+      assigneePick.innerHTML = `<option value="">— Unassigned —</option>`;
+      for(const p of (data ?? [])){
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.full_name ? p.full_name : `Agent • ${p.id.slice(0,6)}…`;
+        assigneePick.appendChild(opt);
+      }
+    }
+
+    async function boot(){
+      try{
+        const session = await requireAuth();
+        if(!session) return;
+
+        const me = await getMyProfile(session.user.id);
+        window.__ME = me;
+
+        const role = String(me.role||"").toLowerCase().trim();
+        whoEl.textContent = `${me.full_name ?? session.user.email} (${role})`;
+
+        setStaffUI(role);
+
+        // bindings
+        saveStatusBtn.onclick = async () => { try{ await saveStatus(statusPick.value); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        assignMeBtn.onclick = async () => { try{ await assignToMe(me.id); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        assignMeBtn2.onclick = async () => { try{ await assignToMe(me.id); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        unassignBtn.onclick = async () => { try{ await unassign(); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+
+        setInProgressBtn.onclick = async () => { try{ await saveStatus("in_progress"); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        setResolvedBtn.onclick   = async () => { try{ await saveStatus("resolved"); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        setClosedBtn.onclick     = async () => { try{ await saveStatus("closed"); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        setOpenBtn.onclick       = async () => { try{ await saveStatus("open"); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+
+        postBtn.onclick = async () => { try{ await postComment(me.id); await boot(); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+        uploadBtn.onclick = async () => { try{ await uploadAttachment(me.id); const at = await fetchAttachments(); renderAttachments(at); }catch(e){ showToast("Error", e.message ?? String(e)); } };
+
+        if(window.__IS_ADMIN){
+          try{ await loadAgentsIntoSelect(); }
+          catch(e){ showToast("Agent list blocked", e.message ?? String(e)); }
+
+          assignBtn.onclick = async () => {
+            try{
+              await assignToUser(assigneePick.value || null);
+              await boot();
+            }catch(e){
+              showToast("Assign failed", e.message ?? String(e));
+            }
+          };
+        }
+
+        // load data
+        const [t, cs, at] = await Promise.all([fetchTicket(), fetchComments(), fetchAttachments()]);
+        await renderTicket(t);
+        await renderComments(cs, me.id);
+        renderAttachments(at);
+        lucide.createIcons();
+      }catch(e){
+        console.error(e);
+        showToast("Fatal error", e.message ?? String(e));
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>

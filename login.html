@@ -1,0 +1,280 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • IT Helpdesk</title>
+  <link rel="stylesheet" href="./app.css" />
+  <style>
+    .authWrap{
+      min-height: calc(100vh - 44px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px;
+    }
+    .authCard{
+      width: min(460px, 100%);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      animation: pop .35s ease both;
+    }
+    .authHead{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom: 12px;
+    }
+    .authLogo{
+      width:42px; height:42px; border-radius: 16px;
+      background: radial-gradient(circle at 30% 20%, rgba(110,231,255,.9), rgba(167,139,250,.75) 60%, rgba(255,255,255,.08));
+      box-shadow: 0 10px 30px rgba(110,231,255,.12);
+    }
+    .authTitle{ margin:0; font-size: 18px; }
+    .authSub{ margin:0; color: var(--muted); font-size: 12px; }
+
+    .err{ margin-top:10px; color:#ff9aa7; font-size: 13px; }
+    .hint{ margin-top:10px; color: var(--muted); font-size: 12px; }
+    .split{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      margin-top: 10px;
+    }
+    .ghost{
+      background: rgba(255,255,255,.04);
+    }
+    .demoBox{
+    margin-top:12px;
+    border:1px solid var(--stroke);
+    border-radius: 16px;
+    background: rgba(255,255,255,.04);
+    padding: 10px;
+  }
+  details.demoBox > summary{
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    user-select:none;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  details.demoBox > summary::-webkit-details-marker{ display:none; }
+  .demoInner{ margin-top:10px; display:grid; gap:10px; }
+  .demoRow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chipBtn{
+    border:1px solid var(--stroke);
+    background: rgba(255,255,255,.05);
+    color: inherit;
+    border-radius: 999px;
+    padding: 8px 10px;
+    font-size: 12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform .08s ease, background .15s ease;
+  }
+  .chipBtn:hover{ background: rgba(255,255,255,.08); }
+  .chipBtn:active{ transform: scale(.98); }
+  .chipDot{
+    width:8px; height:8px; border-radius:99px;
+    background: rgba(255,255,255,.35);
+  }
+  .demoNote{
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .copyMini{
+    border:1px solid var(--stroke);
+    background: rgba(255,255,255,.03);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .kbd{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    border:1px solid var(--stroke);
+    background: rgba(255,255,255,.04);
+    border-radius: 8px;
+    padding: 2px 6px;
+    color: rgba(255,255,255,.8);
+  }
+  </style>
+</head>
+<body>
+  <div class="container" style="padding-top:22px;">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">NJ</div>
+        <div>
+          <h1>IT Helpdesk</h1>
+          <p>Tickets • Queues • Assignments</p>
+        </div>
+      </div>
+      <div class="user">
+        <span class="pill"><i data-lucide="shield"></i> Secure login</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="authWrap">
+    <div class="authCard">
+      <div class="authHead">
+        <div class="authLogo">NJ</div>
+        <div>
+          <p class="authTitle">Sign in</p>
+          <p class="authSub">Use your email & password</p>
+        </div>
+      </div>
+
+      <form id="loginForm">
+        <label>Email</label>
+        <input id="email" type="email" required placeholder="email@example.com" autocomplete="email">
+
+        <div style="height:10px;"></div>
+
+        <label>Password</label>
+        <input id="password" type="password" required placeholder="••••••••" autocomplete="current-password">
+
+        <div class="split">
+          <button class="btn primary" type="submit" style="width:100%;">
+            <i data-lucide="log-in"></i> Sign in
+          </button>
+        </div>
+
+        <div id="msg" class="err"></div>
+        <div class="hint">Tip: if you’re already logged in, you’ll be redirected automatically.</div>
+        <details class="demoBox" id="demoBox">
+          <summary>
+            <span style="display:flex; align-items:center; gap:8px;">
+              <i data-lucide="sparkles"></i> Try the demo accounts
+            </span>
+            <span class="kbd">Click to expand</span>
+          </summary>
+
+          <div class="demoInner">
+            <div class="demoRow" role="group" aria-label="Demo accounts">
+              <button type="button" class="chipBtn" data-demo="requester">
+                <span class="chipDot"></span> Requester
+              </button>
+              <button type="button" class="chipBtn" data-demo="agent">
+                <span class="chipDot"></span> Agent
+              </button>
+              <button type="button" class="chipBtn" data-demo="admin">
+                <span class="chipDot"></span> Admin
+              </button>
+            </div>
+
+            <div class="copyMini" id="demoCreds">
+              Select a role to autofill email & password.
+            </div>
+
+            <div class="demoNote">
+              This is a demo environment. Accounts have limited permissions and sample data.
+            </div>
+          </div>
+        </details>
+      </form>
+
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button class="btn ghost" id="goDashBtn" type="button" style="width:100%;">
+          <i data-lucide="layout-dashboard"></i> Go to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module">
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    lucide.createIcons();
+
+    const msg = document.getElementById("msg");
+
+    // If already logged in → dashboard (prevents the weird "login page overlay" vibe)
+    const { data: sess } = await sb.auth.getSession();
+    if (sess.session) location.href = "./dashboard.html";
+
+    document.getElementById("goDashBtn").onclick = () => location.href = "./dashboard.html";
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        msg.textContent = error.message;
+        return;
+      }
+      location.href = "./dashboard.html";
+    });
+    // Demo accounts (fills inputs only; does NOT auto-login)
+const DEMO = {
+  requester: {
+    label: "Demo Requester",
+    email: "requester@test.com",
+    password: "demo1234",
+    note: "Can create tickets + comment + view own tickets."
+  },
+  agent: {
+    label: "Demo Agent",
+    email: "agent@test.com",
+    password: "demo1234",
+    note: "Can manage assigned tickets + update status + reply."
+  },
+  admin: {
+    label: "Demo Admin",
+    email: "admin@test.com",
+    password: "demo1234",
+    note: "Can view all tickets + manage assignments + access admin pages."
+  }
+};
+
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const demoCreds = document.getElementById("demoCreds");
+
+document.querySelectorAll("[data-demo]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const key = btn.getAttribute("data-demo");
+    const acc = DEMO[key];
+    if (!acc) return;
+
+    emailEl.value = acc.email;
+    passEl.value = acc.password;
+
+    demoCreds.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <strong style="color: rgba(255,255,255,.9); font-size: 12px;">${acc.label}</strong>
+        <span class="kbd">Autofilled</span>
+      </div>
+      <div style="margin-top:8px; display:grid; gap:6px;">
+        <div><span class="kbd">email</span> ${acc.email}</div>
+        <div><span class="kbd">password</span> ${acc.password}</div>
+        <div style="margin-top:4px;">${acc.note}</div>
+      </div>
+    `;
+
+    // optional: focus the Sign in button area for flow
+    emailEl.focus();
+  });
+});
+  </script>
+</body>
+</html>

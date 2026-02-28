@@ -1,0 +1,357 @@
+:root{
+  --bg: #0b1220;
+  --panel: rgba(255,255,255,.06);
+  --panel2: rgba(255,255,255,.08);
+  --stroke: rgba(255,255,255,.10);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.65);
+
+  --brand: #6ee7ff;
+  --brand2:#a78bfa;
+
+  --shadow: 0 20px 60px rgba(0,0,0,.35);
+  --shadow2: 0 10px 30px rgba(0,0,0,.28);
+
+  --r: 18px;
+  --r2: 14px;
+  --pad: 16px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  color:var(--text);
+  background:
+    radial-gradient(1000px 600px at 20% 0%, rgba(110,231,255,.25), transparent 60%),
+    radial-gradient(900px 600px at 90% 10%, rgba(167,139,250,.25), transparent 60%),
+    radial-gradient(1200px 900px at 60% 120%, rgba(52,211,153,.10), transparent 55%),
+    var(--bg);
+}
+
+a{ color: var(--brand); text-decoration:none; }
+a:hover{ text-decoration:underline; }
+
+.container{ max-width: 1200px; margin: 0 auto; padding: 22px; }
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  padding: 14px 16px;
+  border:1px solid var(--stroke);
+  border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(10px);
+}
+
+.brand{
+  display:flex; align-items:center; gap:10px;
+}
+.brand .logo{
+  width:38px;height:38px;border-radius:14px;
+  background: radial-gradient(circle at 30% 20%, rgba(110,231,255,.9), rgba(167,139,250,.75) 60%, rgba(255,255,255,.08));
+  box-shadow: 0 10px 30px rgba(110,231,255,.12);
+}
+.brand h1{ font-size: 18px; margin:0; letter-spacing:.2px; }
+.brand p{ margin:0; font-size: 12px; color:var(--muted); }
+
+.user{
+  display:flex; align-items:center; gap:10px;
+  color:var(--muted);
+  font-size: 13px;
+}
+.pill{
+  display:inline-flex; align-items:center; gap:8px;
+  border:1px solid var(--stroke);
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+}
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:1px solid var(--stroke);
+  background: rgba(255,255,255,.07);
+  color:var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.btn:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+.btn:active{ transform: translateY(0px) scale(.99); }
+.btn.primary{
+  border-color: rgba(110,231,255,.35);
+  background: linear-gradient(135deg, rgba(110,231,255,.18), rgba(167,139,250,.14));
+}
+.btn.danger{ border-color: rgba(239,68,68,.35); }
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+@media (min-width: 1050px){
+  .grid{ grid-template-columns: 1.2fr .8fr; }
+}
+.card{
+  border:1px solid var(--stroke);
+  background: rgba(255,255,255,.06);
+  border-radius: var(--r);
+  padding: var(--pad);
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(10px);
+  animation: pop .35s ease both;
+}
+@keyframes pop{ from{ opacity:0; transform: translateY(8px); } to{ opacity:1; transform: translateY(0); } }
+
+.cardHeader{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  margin-bottom: 10px;
+}
+.cardTitle{
+  display:flex; align-items:center; gap:10px;
+}
+.cardTitle h2{ margin:0; font-size: 16px; }
+.cardTitle span{ color:var(--muted); font-size: 12px; }
+
+.fieldRow{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 900px){
+  .fieldRow{ grid-template-columns: 1.2fr .6fr .8fr auto; align-items:end; }
+}
+
+label{ font-size: 12px; color:var(--muted); }
+input, select, textarea{
+  width:100%;
+  border:1px solid var(--stroke);
+  background: rgba(0,0,0,.20);
+  color:var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  outline:none;
+}
+textarea{ min-height: 110px; resize: vertical; }
+input:focus, select:focus, textarea:focus{ border-color: rgba(110,231,255,.35); box-shadow: 0 0 0 3px rgba(110,231,255,.10); }
+
+.kpis{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.kpi{
+  padding: 12px;
+  border-radius: 16px;
+  border:1px solid var(--stroke);
+  background: rgba(255,255,255,.05);
+}
+.kpi strong{ display:block; font-size: 18px; }
+.kpi span{ color:var(--muted); font-size: 12px; }
+
+.table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+.table td{
+  padding: 10px 12px;
+  border-top:1px solid var(--stroke);
+  border-bottom:1px solid var(--stroke);
+  background: rgba(0,0,0,.18);
+}
+.table tr td:first-child{
+  border-left:1px solid var(--stroke);
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+.table tr td:last-child{
+  border-right:1px solid var(--stroke);
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
+  text-align:right;
+}
+
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border:1px solid var(--stroke);
+  font-size: 12px;
+}
+.badge.status-open{ background: rgba(59,130,246,.14); border-color: rgba(59,130,246,.24); }
+.badge.status-in_progress{ background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.24); }
+.badge.status-waiting_on_user{ background: rgba(168,85,247,.14); border-color: rgba(168,85,247,.24); }
+.badge.status-resolved{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.24); }
+.badge.status-closed{ background: rgba(148,163,184,.14); border-color: rgba(148,163,184,.24); }
+
+.badge.prio-low{ background: rgba(148,163,184,.14); }
+.badge.prio-medium{ background: rgba(59,130,246,.14); }
+.badge.prio-high{ background: rgba(245,158,11,.14); }
+.badge.prio-urgent{ background: rgba(239,68,68,.18); border-color: rgba(239,68,68,.30); }
+
+.toast{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: min(420px, calc(100vw - 36px));
+  border:1px solid var(--stroke);
+  border-radius: 16px;
+  background: rgba(10,15,25,.72);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  display:none;
+}
+.toast.show{ display:block; animation: pop .22s ease both; }
+.toast .title{ font-weight:700; margin:0; font-size: 13px; }
+.toast .body{ margin:6px 0 0; color:var(--muted); font-size: 12px; }
+
+/* ===== FIX: Select text truncation + nicer dropdown menu ===== */
+
+/* Make selects wide enough + prevent the tiny width issue */
+select{
+  min-width: 140px;
+  width: 100%;
+  padding-right: 40px;      /* room for arrow */
+  appearance: none;         /* consistent look */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,.65) 50%),
+    linear-gradient(135deg, rgba(255,255,255,.65) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+/* Better dropdown list colors (Chromium/Windows respects these) */
+select option{
+  background: #0f172a;      /* slate-900 */
+  color: rgba(255,255,255,.92);
+}
+
+/* On Windows the opened list can ignore option bg sometimes; this helps too */
+select:focus{
+  border-color: rgba(110,231,255,.50);
+  box-shadow: 0 0 0 3px rgba(110,231,255,.14);
+}
+
+/* ===== FIX: Field layout so Priority doesn't get cramped ===== */
+.fieldRow{
+  grid-template-columns: 1.4fr .8fr .9fr auto; /* give priority more space */
+}
+@media (max-width: 900px){
+  .fieldRow{ grid-template-columns: 1fr; }
+}
+
+/* ===== LOGO: NJ badge ===== */
+.brand .logo{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: .5px;
+  color: rgba(255,255,255,.92);
+  background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(167,139,250,.18));
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+/* smaller logo variant (login) */
+.authLogo{
+  display:grid;
+  place-items:center;
+  font-weight: 800;
+  letter-spacing:.5px;
+  color: rgba(255,255,255,.92);
+  border:1px solid rgba(255,255,255,.14);
+  background: linear-gradient(135deg, rgba(110,231,255,.22), rgba(167,139,250,.18));
+}
+
+/* ===== Form inputs: prevent narrow truncation ===== */
+.fieldRow{
+  grid-template-columns: minmax(320px, 1.6fr) minmax(160px, .7fr) minmax(220px, .9fr) auto;
+  align-items: end;
+}
+
+#title{ min-width: 320px; }
+#category{ min-width: 220px; }
+#priority{ min-width: 160px; }
+
+/* If screen is small, stack nicely */
+@media (max-width: 980px){
+  .fieldRow{ grid-template-columns: 1fr; }
+  #title, #category, #priority{ min-width: 0; }
+}
+
+/* Create ticket layout fix */
+.ticketRow2{
+  display:grid;
+  grid-template-columns: 180px 1fr auto;
+  gap:12px;
+  align-items:end;
+}
+
+.createBtnWrap{
+  display:flex;
+  align-items:end;
+}
+
+#category{ min-width: 260px; }
+#priority{ min-width: 160px; }
+
+@media (max-width: 900px){
+  .ticketRow2{
+    grid-template-columns: 1fr;
+  }
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(1200px 700px at 20% 10%, rgba(110,231,255,.18), transparent 55%),
+              radial-gradient(900px 600px at 90% 20%, rgba(167,139,250,.18), transparent 55%),
+              radial-gradient(1000px 700px at 40% 90%, rgba(34,211,238,.10), transparent 60%),
+              #070B14;
+  background-attachment: fixed;
+}
+
+/* === Nice file input === */
+.fileWrap{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.fileInput{
+  position: relative;
+  display:inline-flex; align-items:center; gap:10px;
+  border:1px solid var(--stroke);
+  background: rgba(255,255,255,.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor:pointer;
+  transition: transform .12s ease, background .12s ease, border-color .12s ease;
+}
+.fileInput:hover{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.18); transform: translateY(-1px); }
+.fileInput:active{ transform: translateY(0px) scale(.99); }
+.fileInput input[type="file"]{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.fileName{
+  color: var(--muted);
+  font-size: 12px;
+  max-width: 260px;
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

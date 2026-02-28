@@ -1,0 +1,413 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard • Helpdesk</title>
+  <link rel="stylesheet" href="./app.css" />
+
+  <!-- Small page-specific CSS to avoid you editing app.css again -->
+  <style>
+    /* Create ticket layout fix */
+    .ticketRow2{
+      display:grid;
+      grid-template-columns: 180px 1fr auto;
+      gap:12px;
+      align-items:end;
+    }
+    .createBtnWrap{ display:flex; align-items:end; }
+    #category{ min-width: 260px; }
+    #priority{ min-width: 160px; }
+    @media (max-width: 900px){
+      .ticketRow2{ grid-template-columns: 1fr; }
+      #category, #priority{ min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">NJ</div>
+        <div>
+          <h1>IT Helpdesk</h1>
+          <p>Tickets • Queues • Assignments</p>
+        </div>
+      </div>
+
+      <div class="user">
+        <span class="pill"><i data-lucide="user"></i> <span id="who"></span></span>
+        <button class="btn danger" id="logoutBtn"><i data-lucide="log-out"></i> Logout</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: Queues -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="cardTitle">
+            <i data-lucide="inbox"></i>
+            <div>
+              <h2>Queues</h2>
+              <span>Work view based on your role</span>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="refreshBtn"><i data-lucide="refresh-cw"></i> Refresh</button>
+          </div>
+        </div>
+
+        <div class="row" style="gap:10px; margin-bottom:10px;">
+          <div style="min-width:200px;">
+            <label>Queue</label>
+            <select id="queuePick"></select>
+          </div>
+
+          <div style="min-width:220px;">
+            <label>Status</label>
+            <select id="statusFilter">
+              <option value="">all</option>
+              <option value="open">open</option>
+              <option value="in_progress">in_progress</option>
+              <option value="waiting_on_user">waiting_on_user</option>
+              <option value="resolved">resolved</option>
+              <option value="closed">closed</option>
+            </select>
+          </div>
+
+          <div style="flex:1; min-width:240px;">
+            <label>Search</label>
+            <input id="searchTitle" placeholder="Search by title..." />
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><strong id="kMy">0</strong><span>My tickets</span></div>
+          <div class="kpi"><strong id="kAssigned">0</strong><span>Assigned to me</span></div>
+          <div class="kpi"><strong id="kUnassigned">0</strong><span>Unassigned</span></div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <table class="table">
+            <tbody id="queueTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Create ticket -->
+      <div class="card">
+        <div class="cardHeader">
+          <div class="cardTitle">
+            <i data-lucide="plus-circle"></i>
+            <div>
+              <h2>Create ticket</h2>
+              <span>Requester or staff</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="ticketForm">
+          <!-- Title row -->
+          <div>
+            <label>Title</label>
+            <input id="title" required placeholder="e.g. Can't connect to Wi-Fi" />
+          </div>
+
+          <div style="height:12px;"></div>
+
+          <!-- Priority + Category + Create row -->
+          <div class="ticketRow2">
+            <div>
+              <label>Priority</label>
+              <select id="priority">
+                <option value="low">low</option>
+                <option value="medium" selected>medium</option>
+                <option value="high">high</option>
+                <option value="urgent">urgent</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Category</label>
+              <input id="category" placeholder="Network, PC, Account..." />
+            </div>
+
+            <div class="createBtnWrap">
+              <button class="btn primary" type="submit">
+                <i data-lucide="send"></i> Create
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-top:10px;">
+            <label>Description</label>
+            <textarea id="description" required placeholder="Describe the issue clearly..."></textarea>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">
+    <p class="title" id="toastTitle"></p>
+    <p class="body" id="toastBody"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script type="module">
+    import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const whoEl = document.getElementById("who");
+    const queuePick = document.getElementById("queuePick");
+    const statusFilter = document.getElementById("statusFilter");
+    const searchTitle = document.getElementById("searchTitle");
+    const queueTable = document.getElementById("queueTable");
+
+    const kMy = document.getElementById("kMy");
+    const kAssigned = document.getElementById("kAssigned");
+    const kUnassigned = document.getElementById("kUnassigned");
+
+    const toast = document.getElementById("toast");
+    const toastTitle = document.getElementById("toastTitle");
+    const toastBody = document.getElementById("toastBody");
+
+    function showToast(title, body){
+      toastTitle.textContent = title;
+      toastBody.textContent = body ?? "";
+      toast.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "").replace(/[&<>"']/g, (m) => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+      }[m]));
+    }
+
+    async function requireAuth() {
+      const { data, error } = await sb.auth.getSession();
+      if (error || !data.session) {
+        location.href = "./login.html";
+        return null;
+      }
+      return data.session;
+    }
+
+    async function getMyProfile(userId) {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("id, full_name, role")
+        .eq("id", userId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    function applyClientFilters(rows) {
+      const st = statusFilter.value;
+      const q = searchTitle.value.trim().toLowerCase();
+      return rows.filter(r => {
+        if (st && r.status !== st) return false;
+        if (q && !String(r.title ?? "").toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }
+
+    function badgeStatus(s){
+      return `<span class="badge status-${s}"><i data-lucide="activity"></i> ${s}</span>`;
+    }
+    function badgePrio(p){
+      return `<span class="badge prio-${p}"><i data-lucide="flag"></i> ${p}</span>`;
+    }
+
+    async function fetchTicketsBase() {
+      const { data, error } = await sb
+        .from("tickets")
+        .select("id,title,status,priority,category,created_at,requester_id,assigned_to")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    }
+
+    async function claimTicket(ticketId, myId) {
+      const { error } = await sb
+        .from("tickets")
+        .update({ assigned_to: myId, status: "in_progress" })
+        .eq("id", ticketId)
+        .is("assigned_to", null);
+      if (error) throw error;
+    }
+
+    function rowHtml(t, rightHtml = ""){
+      const cat = t.category ? ` • ${escapeHtml(t.category)}` : "";
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="min-width:54px;">
+                <a href="./ticket.html?id=${t.id}">#${t.id}</a>
+              </div>
+              <div>
+                <div style="font-weight:700; white-space:normal; word-break:break-word;">
+                  ${escapeHtml(t.title)}
+                </div>
+                <div class="muted">${new Date(t.created_at).toLocaleString()}${cat}</div>
+                <div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;">
+                  ${badgeStatus(t.status)}
+                  ${badgePrio(t.priority)}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>${rightHtml}</td>
+        </tr>
+      `;
+    }
+
+    function setQueueOptions(role){
+queuePick.innerHTML = "";
+
+const add = (val, label) => {
+const o = document.createElement("option");
+o.value = val;
+o.textContent = label;
+queuePick.appendChild(o);
+};
+
+if (role === "requester") {
+add("mine", "My tickets");
+queuePick.value = "mine";
+return;
+}
+
+add("assigned", "Assigned to me");
+add("unassigned", "Unassigned");
+
+if (role === "admin") {
+add("all", "All tickets");
+queuePick.value = "all";
+} else {
+queuePick.value = "unassigned";
+}
+}
+
+
+    async function loadQueues(profile) {
+      const isStaff = (profile.role === "agent" || profile.role === "admin");
+      const isAdmin = (profile.role === "admin");
+
+      const rowsAll = applyClientFilters(await fetchTicketsBase());
+
+      const mine = rowsAll.filter(t => t.requester_id === profile.id);
+      const assignedToMe = rowsAll.filter(t => t.assigned_to === profile.id);
+      const unassigned = rowsAll.filter(t => t.assigned_to == null);
+
+      kMy.textContent = String(mine.length);
+      kAssigned.textContent = isStaff ? String(assignedToMe.length) : "0";
+      kUnassigned.textContent = isStaff ? String(unassigned.length) : "0";
+
+      let view = queuePick.value;
+      if (!isStaff && view !== "mine") view = "mine";
+      if (isStaff && view === "all" && !isAdmin) view = "assigned";
+
+      let list = [];
+      if (view === "mine") list = mine;
+      if (view === "assigned") list = assignedToMe;
+      if (view === "unassigned") list = unassigned;
+      if (view === "all") list = rowsAll;
+
+      queueTable.innerHTML = "";
+
+      if (!list.length){
+        const label =
+          view === "assigned" ? "Nothing assigned to you." :
+          view === "unassigned" ? "No unassigned tickets right now." :
+          view === "all" ? "No tickets found." :
+          "No tickets yet.";
+        queueTable.innerHTML = `<tr><td class="muted">${label}</td><td></td></tr>`;
+        lucide.createIcons();
+        return;
+      }
+
+      queueTable.innerHTML = list.map(t => {
+        if (isStaff && view === "unassigned") {
+          return rowHtml(t, `<button class="btn primary btnSmall" data-claim="${t.id}">
+            <i data-lucide="hand"></i> Claim
+          </button>`);
+        }
+        return rowHtml(t, `<a class="btn btnSmall" href="./ticket.html?id=${t.id}">
+          <i data-lucide="arrow-right"></i> Open
+        </a>`);
+      }).join("");
+
+      queueTable.querySelectorAll("button[data-claim]").forEach(btn => {
+        btn.onclick = async () => {
+          btn.disabled = true;
+          try{
+            const id = Number(btn.getAttribute("data-claim"));
+            await claimTicket(id, profile.id);
+            showToast("Ticket claimed", `#${id} assigned to you`);
+            await loadQueues(profile);
+          }catch(e){
+            showToast("Error", e.message ?? String(e));
+            btn.disabled = false;
+          }
+        };
+      });
+
+      lucide.createIcons();
+    }
+
+    // Boot
+    const session = await requireAuth();
+    const profile = await getMyProfile(session.user.id);
+
+    whoEl.textContent = `${profile.full_name ?? session.user.email} (${profile.role})`;
+    setQueueOptions(profile.role);
+
+    lucide.createIcons();
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await sb.auth.signOut();
+      location.href = "./login.html";
+    };
+
+    document.getElementById("refreshBtn").onclick = () => loadQueues(profile);
+    statusFilter.onchange = () => loadQueues(profile);
+    searchTitle.oninput = () => loadQueues(profile);
+    queuePick.onchange = () => loadQueues(profile);
+
+    document.getElementById("ticketForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const priority = document.getElementById("priority").value;
+      const category = document.getElementById("category").value.trim() || null;
+
+      const { error } = await sb.from("tickets").insert([{
+        requester_id: profile.id,
+        title,
+        description,
+        priority,
+        category
+      }]);
+
+      if (error) {
+        showToast("Error creating ticket", error.message);
+        return;
+      }
+
+      e.target.reset();
+      showToast("Ticket created", "Added to the queue.");
+      await loadQueues(profile);
+    });
+
+    await loadQueues(profile);
+  </script>
+</body>
+</html>
